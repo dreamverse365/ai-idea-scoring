@@ -155,7 +155,7 @@ button{font:inherit}
   <section id="judgeScreen" class="glass-card welcome">
     <div class="hero-badge"><svg class="mini-icon" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg></div>
     <h1>เลือกกรรมการ</h1>
-    <p>เลือก Judge ของคุณก่อนเริ่มประเมิน</p>
+    <p>เลือกของคุณก่อนเริ่มประเมิน</p>
     <div id="judgeButtons" class="judge-buttons"><div class="loading">กำลังโหลด...</div></div>
   </section>
 
@@ -163,7 +163,7 @@ button{font:inherit}
     <div id="completeBanner" class="complete-banner">✓ คุณให้คะแนนครบทั้ง 13 ทีมแล้ว</div>
     <div class="glass-card">
       <div class="summary">
-        <div><h2>เลือกทีม</h2><p>ทีมที่มี ✓ สามารถกดกลับเข้าไปแก้คะแนนได้</p></div>
+        <div><h2>เลือกทีมที่ต้องการประเมิน</h2><p>ทีมที่มีเครื่องหมาย ✓ สามารถกดเข้าไปแก้คะแนนได้</p></div>
         <div id="progressText" class="progress-text">0 / 13</div>
       </div>
       <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
@@ -295,7 +295,7 @@ function renderTeams(){
     const scored=scoredIds.has(team.id);
     return `<button class="team-button ${scored?"scored":""}" onclick="openTeam(${team.id})">
       <div class="team-left"><div class="team-no">${String(team.team_no).padStart(2,"0")}</div><div class="team-name">${escapeHtml(team.name)}</div></div>
-      <div class="team-status">${scored?"✓ ให้แล้ว":"ให้คะแนน →"}</div></button>`;
+      <div class="team-status">${scored?"✓ ประเมินแล้ว":"เริ่มประเมิน →"}</div></button>`;
   }).join("");
 }
 function showTeams(){
