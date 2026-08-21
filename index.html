@@ -1,928 +1,355 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#08162D" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#071b3c">
   <title>AI Idea Pitching - Judge Scoring</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
 
-  <style>
-    :root{
-      --navy:#08162D;
-      --blue:#087BFF;
-      --cyan:#33D7FF;
-      --orange:#FFB800;
-      --bg:#F4F8FC;
-      --card:#FFFFFF;
-      --text:#122033;
-      --muted:#6B7A90;
-      --line:#DDE6F0;
-      --success:#159A68;
-      --danger:#D64545;
-    }
-
-    *{box-sizing:border-box}
-
-    body{
-      margin:0;
-      font-family:Arial, "Noto Sans Thai", sans-serif;
-      background:var(--bg);
-      color:var(--text);
-    }
-
-    button{
-      font:inherit;
-    }
-
-    .topbar{
-      background:linear-gradient(135deg,var(--navy),#0E2E5A);
-      color:white;
-      padding:18px 16px;
-      position:sticky;
-      top:0;
-      z-index:20;
-      box-shadow:0 6px 20px rgba(8,22,45,.14);
-    }
-
-    .topbar-inner{
-      max-width:760px;
-      margin:auto;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-
-    .brand{
-      font-weight:800;
-      letter-spacing:.3px;
-    }
-
-    .brand small{
-      display:block;
-      margin-top:3px;
-      font-size:12px;
-      color:#B8D9FF;
-      font-weight:600;
-    }
-
-    .judge-chip{
-      border:1px solid rgba(255,255,255,.28);
-      background:rgba(255,255,255,.08);
-      color:white;
-      border-radius:999px;
-      padding:8px 11px;
-      cursor:pointer;
-      font-size:13px;
-      display:none;
-    }
-
-    .container{
-      width:min(760px,100%);
-      margin:auto;
-      padding:18px 14px 40px;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:20px;
-      padding:18px;
-      box-shadow:0 10px 30px rgba(24,62,98,.07);
-    }
-
-    .hidden{display:none !important}
-
-    h1,h2,h3,p{margin-top:0}
-
-    .judge-select{
-      text-align:center;
-      padding:28px 18px;
-    }
-
-    .judge-select h1{
-      font-size:26px;
-      margin-bottom:8px;
-    }
-
-    .judge-select p{
-      color:var(--muted);
-      margin-bottom:22px;
-    }
-
-    .judge-buttons{
-      display:grid;
-      gap:12px;
-    }
-
-    .judge-button{
-      border:none;
-      border-radius:16px;
-      min-height:58px;
-      background:#EDF5FF;
-      color:#0A4FAE;
-      font-weight:800;
-      font-size:18px;
-      cursor:pointer;
-      transition:.15s ease;
-    }
-
-    .judge-button:hover{
-      transform:translateY(-1px);
-      background:#E1EEFF;
-    }
-
-    .summary{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-
-    .summary-title{
-      font-size:20px;
-      font-weight:800;
-    }
-
-    .progress-text{
-      font-size:14px;
-      font-weight:800;
-      color:#0A4FAE;
-      background:#EAF3FF;
-      padding:8px 11px;
-      border-radius:999px;
-      white-space:nowrap;
-    }
-
-    .progress-bar{
-      height:9px;
-      background:#E6EDF5;
-      border-radius:999px;
-      overflow:hidden;
-      margin-bottom:18px;
-    }
-
-    .progress-fill{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,var(--blue),var(--cyan));
-      transition:.3s ease;
-    }
-
-    .team-list{
-      display:grid;
-      gap:10px;
-    }
-
-    .team-button{
-      width:100%;
-      text-align:left;
-      border:1px solid var(--line);
-      background:white;
-      border-radius:15px;
-      padding:14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      transition:.15s ease;
-    }
-
-    .team-button:hover{
-      border-color:#A7CAFF;
-      background:#F8FBFF;
-    }
-
-    .team-left{
-      display:flex;
-      align-items:center;
-      min-width:0;
-      gap:12px;
-    }
-
-    .team-no{
-      width:38px;
-      height:38px;
-      flex:0 0 38px;
-      border-radius:12px;
-      background:#EDF5FF;
-      color:#0A4FAE;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:13px;
-      font-weight:900;
-    }
-
-    .team-name{
-      font-weight:750;
-      line-height:1.25;
-    }
-
-    .team-status{
-      color:#8A99AB;
-      font-size:13px;
-      flex:0 0 auto;
-    }
-
-    .team-button.scored{
-      border-color:#BDE6D6;
-      background:#F7FFFB;
-    }
-
-    .team-button.scored .team-no{
-      background:#E3F7EE;
-      color:var(--success);
-    }
-
-    .team-button.scored .team-status{
-      color:var(--success);
-      font-weight:800;
-    }
-
-    .score-head{
-      margin-bottom:18px;
-    }
-
-    .back-btn{
-      border:none;
-      background:transparent;
-      color:#0A63D8;
-      padding:0;
-      margin-bottom:15px;
-      cursor:pointer;
-      font-weight:800;
-    }
-
-    .selected-team-no{
-      color:#0A63D8;
-      font-size:13px;
-      font-weight:900;
-      letter-spacing:1px;
-      margin-bottom:4px;
-    }
-
-    .selected-team-name{
-      font-size:25px;
-      font-weight:900;
-      line-height:1.15;
-    }
-
-    .criterion{
-      border-top:1px solid var(--line);
-      padding:18px 0;
-    }
-
-    .criterion:first-of-type{
-      border-top:none;
-    }
-
-    .criterion-top{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      justify-content:space-between;
-    }
-
-    .criterion h3{
-      font-size:17px;
-      line-height:1.35;
-      margin-bottom:6px;
-    }
-
-    .criterion p{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-      margin-bottom:14px;
-    }
-
-    .weight{
-      background:#FFF6DB;
-      color:#9B6800;
-      font-weight:900;
-      border-radius:999px;
-      padding:6px 9px;
-      font-size:12px;
-      white-space:nowrap;
-    }
-
-    .ratings{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);
-      gap:8px;
-    }
-
-    .rating-btn{
-      min-height:50px;
-      border:1px solid #CBD8E6;
-      background:white;
-      border-radius:13px;
-      color:#29425F;
-      font-size:18px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .rating-btn.active{
-      border-color:var(--blue);
-      background:linear-gradient(135deg,var(--blue),#159FEF);
-      color:white;
-      box-shadow:0 5px 14px rgba(8,123,255,.20);
-    }
-
-    .submit-btn{
-      width:100%;
-      min-height:58px;
-      border:none;
-      border-radius:16px;
-      background:linear-gradient(135deg,var(--blue),#00AEEA);
-      color:white;
-      font-weight:900;
-      font-size:17px;
-      cursor:pointer;
-      margin-top:8px;
-    }
-
-    .submit-btn:disabled{
-      opacity:.4;
-      cursor:not-allowed;
-    }
-
-    .notice{
-      margin-top:12px;
-      padding:12px 14px;
-      border-radius:13px;
-      font-size:14px;
-      display:none;
-    }
-
-    .notice.success{
-      display:block;
-      background:#EAF9F2;
-      color:#0B7B51;
-      border:1px solid #BCEAD6;
-    }
-
-    .notice.error{
-      display:block;
-      background:#FFF0F0;
-      color:#B53636;
-      border:1px solid #F3C4C4;
-    }
-
-    .loading{
-      text-align:center;
-      color:var(--muted);
-      padding:30px;
-    }
-
-    .complete-banner{
-      background:linear-gradient(135deg,#EAF9F2,#F6FFFB);
-      border:1px solid #BCEAD6;
-      color:#0D704C;
-      padding:16px;
-      border-radius:16px;
-      margin-bottom:14px;
-      font-weight:850;
-      display:none;
-    }
-
-    @media(max-width:480px){
-      .container{padding:14px 10px 34px}
-      .card{border-radius:17px;padding:15px}
-      .selected-team-name{font-size:22px}
-      .criterion h3{font-size:16px}
-      .rating-btn{min-height:52px}
-    }
-  </style>
+<style>
+:root{
+  --navy:#071b3c;--navy2:#0b3470;--blue:#178bff;--cyan:#28d9ff;
+  --orange:#ffb300;--white:#fff;--text:#13233b;--muted:#66758a;
+  --line:#dce7f2;--success:#10a36d;--danger:#d84a4a;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  margin:0;font-family:"Prompt",sans-serif;color:var(--text);
+  background:#071b3c;position:relative;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-2;
+  background:url("assets/ai-pitching-bg.webp") center/cover no-repeat;
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(4,18,52,.55),rgba(5,28,70,.78));
+}
+button{font:inherit}
+.icon,.mini-icon{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.icon{width:28px;height:28px} .mini-icon{width:18px;height:18px}
+.app-shell{width:min(820px,100%);margin:auto;padding:18px 14px 44px}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:14px;
+}
+.brand-wrap{display:flex;align-items:center;gap:12px}
+.logo-box{
+  background:white;border-radius:14px;padding:7px 10px;
+  box-shadow:0 8px 25px rgba(0,0,0,.18)
+}
+.logo-box img{display:block;width:128px;height:auto}
+.event-title{color:white;font-weight:800;line-height:1.15}
+.event-title small{display:block;color:#9fe8ff;font-size:11px;letter-spacing:1px;margin-top:4px}
+.judge-chip{
+  display:none;border:1px solid rgba(255,255,255,.28);background:rgba(5,22,55,.5);
+  color:white;border-radius:999px;padding:9px 12px;cursor:pointer;backdrop-filter:blur(8px)
+}
+.glass-card{
+  background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.45);
+  border-radius:24px;padding:20px;box-shadow:0 20px 55px rgba(0,18,56,.23);
+}
+.hidden{display:none!important}
+.welcome{text-align:center;padding:26px 18px}
+.hero-badge{
+  width:64px;height:64px;border-radius:18px;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;color:#087cff;
+  background:linear-gradient(145deg,#e8f4ff,#f6fcff)
+}
+.welcome h1{font-size:27px;margin:0 0 7px}
+.welcome p{color:var(--muted);margin:0 0 20px;font-size:14px}
+.judge-buttons{display:grid;gap:11px}
+.judge-button{
+  min-height:60px;border:1px solid #cfe2f7;background:#f6fbff;border-radius:16px;
+  color:#0756b2;font-size:17px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:9px;transition:.15s ease
+}
+.judge-button:hover{transform:translateY(-1px);background:#edf7ff;border-color:#9dcbff}
+.summary{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.summary h2{font-size:21px;margin:0}
+.summary p{font-size:12px;color:var(--muted);margin:4px 0 0}
+.progress-text{background:#eaf4ff;color:#0766d6;padding:8px 11px;border-radius:999px;font-size:13px;font-weight:800;white-space:nowrap}
+.progress-bar{height:9px;background:#e5edf5;border-radius:999px;overflow:hidden;margin-bottom:18px}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:.3s}
+.team-list{display:grid;gap:9px}
+.team-button{
+  width:100%;border:1px solid var(--line);border-radius:15px;padding:13px;background:white;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;cursor:pointer
+}
+.team-button:hover{background:#f8fbff;border-color:#afd1ff}
+.team-button.scored{background:#f6fffb;border-color:#bfe8d7}
+.team-left{display:flex;align-items:center;gap:11px;min-width:0}
+.team-no{
+  width:40px;height:40px;flex:0 0 40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;background:#eaf4ff;
+  color:#0863c9;font-weight:800;font-size:12px
+}
+.team-button.scored .team-no{background:#e3f8ef;color:var(--success)}
+.team-name{font-weight:650;line-height:1.28}
+.team-status{font-size:12px;color:#7a899d;white-space:nowrap}
+.team-button.scored .team-status{color:var(--success);font-weight:700}
+.complete-banner{display:none;background:#e9faf2;border:1px solid #b9ead4;color:#0c7c52;padding:13px 15px;border-radius:15px;margin-bottom:12px;font-weight:700}
+.back-btn{border:none;background:none;color:#0a69d9;padding:0;cursor:pointer;font-weight:700;margin-bottom:15px}
+.score-head{margin-bottom:6px}
+.selected-team-no{font-size:12px;letter-spacing:1.2px;color:#0a69d9;font-weight:800}
+.selected-team-name{font-size:25px;line-height:1.15;font-weight:800;margin-top:3px}
+.criterion{padding:17px 0;border-top:1px solid var(--line)}
+.criterion:first-of-type{border-top:none}
+.criterion-title-row{display:flex;align-items:flex-start;gap:12px}
+.criteria-icon{
+  width:48px;height:48px;flex:0 0 48px;border-radius:15px;
+  display:flex;align-items:center;justify-content:center;color:#0a70df;background:#eaf5ff
+}
+.criterion:nth-of-type(3) .criteria-icon{color:#8b6600;background:#fff6d9}
+.criterion:nth-of-type(4) .criteria-icon{color:#0d8864;background:#e5f8f1}
+.criterion:nth-of-type(5) .criteria-icon{color:#a25200;background:#fff0df}
+.criteria-copy{flex:1}
+.criteria-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.criteria-copy h3{font-size:16px;line-height:1.35;margin:0 0 5px}
+.criteria-copy p{font-size:12px;line-height:1.5;color:var(--muted);margin:0 0 12px}
+.weight{font-size:11px;font-weight:800;border-radius:999px;background:#fff3c9;color:#936400;padding:5px 8px;white-space:nowrap}
+.ratings{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.rating-btn{
+  min-height:52px;border:1px solid #cbd9e7;background:white;border-radius:13px;
+  font-weight:800;font-size:18px;color:#304963;cursor:pointer
+}
+.rating-btn.active{
+  color:white;border-color:#0c82f2;background:linear-gradient(135deg,#0f7fff,#13b6eb);
+  box-shadow:0 6px 18px rgba(9,126,235,.22)
+}
+.submit-btn{
+  width:100%;min-height:58px;margin-top:8px;border:none;border-radius:16px;cursor:pointer;
+  color:white;background:linear-gradient(135deg,#087fff,#06b4e8);font-weight:800;font-size:16px
+}
+.submit-btn:disabled{opacity:.42;cursor:not-allowed}
+.notice{display:none;margin-top:12px;padding:12px 14px;border-radius:13px;font-size:13px}
+.notice.success{display:block;background:#e9faf2;color:#0d7c53;border:1px solid #b9ead4}
+.notice.error{display:block;background:#fff0f0;color:#b23a3a;border:1px solid #f2c4c4}
+.loading{text-align:center;color:var(--muted);padding:26px}
+.footer-note{color:rgba(255,255,255,.68);font-size:10px;text-align:center;margin-top:12px}
+@media(max-width:520px){
+  .app-shell{padding:12px 10px 34px} .logo-box img{width:102px}
+  .event-title{font-size:12px} .glass-card{padding:15px;border-radius:19px}
+  .selected-team-name{font-size:21px} .criteria-icon{width:42px;height:42px;flex-basis:42px}
+  .summary h2{font-size:19px}
+}
+</style>
 </head>
-
 <body>
-
+<div class="app-shell">
   <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        AI IDEA PITCHING
-        <small>Judge Scoring System</small>
-      </div>
-      <button id="judgeChip" class="judge-chip" onclick="changeJudge()"></button>
+    <div class="brand-wrap">
+      <div class="logo-box"><img src="assets/ofm-b2s-logo.png" alt="OFM B2S"></div>
+      <div class="event-title">AI IDEA PITCHING<small>JUDGE SCORING 2026</small></div>
     </div>
+    <button id="judgeChip" class="judge-chip" onclick="changeJudge()"></button>
   </header>
 
-  <main class="container">
+  <section id="judgeScreen" class="glass-card welcome">
+    <div class="hero-badge"><svg class="mini-icon" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg></div>
+    <h1>เลือกกรรมการ</h1>
+    <p>เลือก Judge ของคุณก่อนเริ่มประเมิน</p>
+    <div id="judgeButtons" class="judge-buttons"><div class="loading">กำลังโหลด...</div></div>
+  </section>
 
-    <!-- SELECT JUDGE -->
-    <section id="judgeScreen" class="card judge-select">
-      <h1>เลือกกรรมการ</h1>
-      <p>เลือกชื่อของคุณก่อนเริ่มให้คะแนน</p>
-
-      <div id="judgeButtons" class="judge-buttons">
-        <div class="loading">กำลังโหลด...</div>
+  <section id="teamScreen" class="hidden">
+    <div id="completeBanner" class="complete-banner">✓ คุณให้คะแนนครบทั้ง 13 ทีมแล้ว</div>
+    <div class="glass-card">
+      <div class="summary">
+        <div><h2>เลือกทีม</h2><p>ทีมที่มี ✓ สามารถกดกลับเข้าไปแก้คะแนนได้</p></div>
+        <div id="progressText" class="progress-text">0 / 13</div>
       </div>
-    </section>
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <div id="teamList" class="team-list"><div class="loading">กำลังโหลดทีม...</div></div>
+    </div>
+  </section>
 
+  <section id="scoreScreen" class="glass-card hidden">
+    <button class="back-btn" onclick="showTeams()">← กลับไปเลือกทีม</button>
+    <div class="score-head">
+      <div id="selectedTeamNo" class="selected-team-no"></div>
+      <div id="selectedTeamName" class="selected-team-name"></div>
+    </div>
 
-    <!-- TEAM LIST -->
-    <section id="teamScreen" class="hidden">
-
-      <div id="completeBanner" class="complete-banner">
-        ✓ คุณให้คะแนนครบทั้ง 13 ทีมแล้ว
-      </div>
-
-      <div class="card">
-        <div class="summary">
-          <div>
-            <div class="summary-title">เลือกทีม</div>
-            <div style="font-size:13px;color:#6B7A90;margin-top:4px;">
-              ✓ = ให้คะแนนแล้ว และสามารถกดเพื่อแก้ไขได้
-            </div>
-          </div>
-
-          <div id="progressText" class="progress-text">0 / 13</div>
-        </div>
-
-        <div class="progress-bar">
-          <div id="progressFill" class="progress-fill"></div>
-        </div>
-
-        <div id="teamList" class="team-list">
-          <div class="loading">กำลังโหลดทีม...</div>
+    <div class="criterion">
+      <div class="criterion-title-row">
+        <div class="criteria-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a4 4 0 0 0 4-4V6a4 4 0 1 0-8 0v4a4 4 0 0 0 4 4Zm-7-4a7 7 0 0 0 14 0M12 17v4M8 21h8"/></svg></div>
+        <div class="criteria-copy">
+          <div class="criteria-top"><h3>1. การเล่าเรื่องและการนำเสนอ</h3><span class="weight">15%</span></div>
+          <p>เล่าเรื่องน่าสนใจ เข้าใจง่าย นำเสนอชัดเจน และบริหารเวลาได้ดี</p>
+          <div class="ratings" data-field="presentation"></div>
         </div>
       </div>
-    </section>
+    </div>
 
-
-    <!-- SCORE FORM -->
-    <section id="scoreScreen" class="card hidden">
-
-      <button class="back-btn" onclick="showTeams()">← กลับไปเลือกทีม</button>
-
-      <div class="score-head">
-        <div id="selectedTeamNo" class="selected-team-no"></div>
-        <div id="selectedTeamName" class="selected-team-name"></div>
-      </div>
-
-      <div class="criterion">
-        <div class="criterion-top">
-          <div>
-            <h3>1. การเล่าเรื่องและการนำเสนอ</h3>
-            <p>เล่าเรื่องน่าสนใจ เข้าใจง่าย นำเสนอชัดเจน และบริหารเวลาได้ดี</p>
-          </div>
-          <span class="weight">15%</span>
+    <div class="criterion">
+      <div class="criterion-title-row">
+        <div class="criteria-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 22h4M8 14c-1.6-1.2-3-3-3-5.5A7 7 0 0 1 19 8.5c0 2.5-1.4 4.3-3 5.5-.7.5-1 1.2-1 2H9c0-.8-.3-1.5-1-2Z"/></svg></div>
+        <div class="criteria-copy">
+          <div class="criteria-top"><h3>2. ความคิดสร้างสรรค์และนวัตกรรม</h3><span class="weight">25%</span></div>
+          <p>ใช้ AI หรือ Prompt อย่างสร้างสรรค์ และก้าวข้ามการใช้งานระดับพื้นฐาน</p>
+          <div class="ratings" data-field="creativity"></div>
         </div>
-        <div class="ratings" data-field="presentation"></div>
       </div>
+    </div>
 
-      <div class="criterion">
-        <div class="criterion-top">
-          <div>
-            <h3>2. ความคิดสร้างสรรค์และนวัตกรรม</h3>
-            <p>ใช้เครื่องมือ AI หรือ Prompt อย่างสร้างสรรค์ และก้าวข้ามการใช้งานระดับพื้นฐาน</p>
-          </div>
-          <span class="weight">25%</span>
+    <div class="criterion">
+      <div class="criterion-title-row">
+        <div class="criteria-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+        <div class="criteria-copy">
+          <div class="criteria-top"><h3>3. ประโยชน์ต่อธุรกิจ</h3><span class="weight">30%</span></div>
+          <p>แสดงให้เห็นว่าแนวคิดสร้างประโยชน์ให้กับทีม ลูกค้า หรือองค์กรอย่างไร</p>
+          <div class="ratings" data-field="business"></div>
         </div>
-        <div class="ratings" data-field="creativity"></div>
       </div>
+    </div>
 
-      <div class="criterion">
-        <div class="criterion-top">
-          <div>
-            <h3>3. ประโยชน์ต่อธุรกิจ</h3>
-            <p>แสดงให้เห็นว่าแนวคิดสร้างประโยชน์ให้กับทีม ลูกค้า หรือองค์กรอย่างไร</p>
-          </div>
-          <span class="weight">30%</span>
+    <div class="criterion">
+      <div class="criterion-title-row">
+        <div class="criteria-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/><path d="M21 12a9 9 0 1 1-5.3-8.2"/></svg></div>
+        <div class="criteria-copy">
+          <div class="criteria-top"><h3>4. สามารถนำไปใช้ได้จริง</h3><span class="weight">30%</span></div>
+          <p>AI Solution นำไปใช้จริง ช่วยลดเวลา ลดขั้นตอน หรือลดข้อผิดพลาดได้</p>
+          <div class="ratings" data-field="practical"></div>
         </div>
-        <div class="ratings" data-field="business"></div>
       </div>
+    </div>
 
-      <div class="criterion">
-        <div class="criterion-top">
-          <div>
-            <h3>4. สามารถนำไปใช้ได้จริง</h3>
-            <p>AI Solution สามารถนำไปใช้จริง ช่วยลดเวลา ลดขั้นตอน หรือลดข้อผิดพลาดได้</p>
-          </div>
-          <span class="weight">30%</span>
-        </div>
-        <div class="ratings" data-field="practical"></div>
-      </div>
+    <button id="submitBtn" class="submit-btn" disabled onclick="submitScore()">ยืนยันคะแนน</button>
+    <div id="notice" class="notice"></div>
+  </section>
 
-      <button id="submitBtn" class="submit-btn" disabled onclick="submitScore()">
-        ยืนยันคะแนน
-      </button>
-
-      <div id="notice" class="notice"></div>
-
-    </section>
-
-  </main>
-
+  <div class="footer-note">AI UNLEASHED • IDEA PITCHING DAY 2026</div>
+</div>
 
 <script>
-/* ==========================================================
-   1) ใส่ข้อมูล Supabase ของคุณตรงนี้
-   ========================================================== */
-
-const SUPABASE_URL = "https://knuredwamhsawszjuyxb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_qKPNvt783aKIjJ9KWv5cSQ_M_CgHW6B";
-
-/* ========================================================== */
-
+const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || "";
+const SUPABASE_KEY = window.APP_CONFIG?.SUPABASE_KEY || "";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let judges = [];
-let teams = [];
-let scores = [];
-let currentJudge = null;
-let currentTeam = null;
+let judges=[],teams=[],scores=[],currentJudge=null,currentTeam=null;
+let formScore={presentation:null,creativity:null,business:null,practical:null};
+const fields=["presentation","creativity","business","practical"];
 
-let formScore = {
-  presentation: null,
-  creativity: null,
-  business: null,
-  practical: null
-};
-
-const fields = [
-  "presentation",
-  "creativity",
-  "business",
-  "practical"
-];
-
-
-document.addEventListener("DOMContentLoaded", async () => {
-
+document.addEventListener("DOMContentLoaded", async()=>{
   renderRatingButtons();
-
-  if (
-    SUPABASE_URL.includes("PASTE_") ||
-    SUPABASE_KEY.includes("PASTE_")
-  ) {
-    document.getElementById("judgeButtons").innerHTML =
-      '<div class="notice error" style="display:block;">กรุณาใส่ SUPABASE_URL และ SUPABASE_KEY ในไฟล์ก่อน</div>';
+  if(!SUPABASE_URL || !SUPABASE_KEY || SUPABASE_URL.includes("PASTE_") || SUPABASE_KEY.includes("PASTE_")){
+    document.getElementById("judgeButtons").innerHTML='<div class="notice error" style="display:block">กรุณาใส่ Supabase URL และ Publishable Key ใน config.js</div>';
     return;
   }
-
   await loadJudges();
-
-  const savedJudgeId = localStorage.getItem("ai_pitching_judge_id");
-
-  if (savedJudgeId) {
-    const judge = judges.find(j => String(j.id) === String(savedJudgeId));
-
-    if (judge) {
-      await selectJudge(judge.id);
-      return;
-    }
+  const savedJudgeId=localStorage.getItem("ai_pitching_judge_id");
+  if(savedJudgeId){
+    const judge=judges.find(j=>String(j.id)===String(savedJudgeId));
+    if(judge){await selectJudge(judge.id);return;}
   }
-
   showJudgeSelection();
 });
 
-
-async function loadJudges() {
-
-  const { data, error } = await sb
-    .from("judges")
-    .select("*")
-    .order("id");
-
-  if (error) {
-    showFatal(error.message);
-    return;
-  }
-
-  judges = data || [];
-
-  document.getElementById("judgeButtons").innerHTML =
-    judges.map(j => `
-      <button class="judge-button" onclick="selectJudge(${j.id})">
-        ${escapeHtml(j.name)}
-      </button>
-    `).join("");
+async function loadJudges(){
+  const {data,error}=await sb.from("judges").select("*").order("id");
+  if(error){showFatal(error.message);return;}
+  judges=data||[];
+  document.getElementById("judgeButtons").innerHTML=judges.map(j=>`
+    <button class="judge-button" onclick="selectJudge(${j.id})"><svg class="mini-icon" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span>${escapeHtml(j.name)}</span></button>`).join("");
 }
-
-
-function showJudgeSelection() {
-
-  currentJudge = null;
-
+function showJudgeSelection(){
+  currentJudge=null;
   document.getElementById("judgeScreen").classList.remove("hidden");
   document.getElementById("teamScreen").classList.add("hidden");
   document.getElementById("scoreScreen").classList.add("hidden");
-  document.getElementById("judgeChip").style.display = "none";
+  document.getElementById("judgeChip").style.display="none";
 }
-
-
-async function selectJudge(judgeId) {
-
-  currentJudge = judges.find(j => j.id === judgeId);
-
-  if (!currentJudge) return;
-
-  localStorage.setItem("ai_pitching_judge_id", judgeId);
-
-  document.getElementById("judgeChip").textContent =
-    currentJudge.name + " · เปลี่ยน";
-
-  document.getElementById("judgeChip").style.display = "block";
-
-  await loadTeamsAndScores();
-  showTeams();
+async function selectJudge(judgeId){
+  currentJudge=judges.find(j=>j.id===judgeId); if(!currentJudge)return;
+  localStorage.setItem("ai_pitching_judge_id",judgeId);
+  const chip=document.getElementById("judgeChip");
+  chip.textContent=currentJudge.name+" · เปลี่ยน"; chip.style.display="block";
+  await loadTeamsAndScores(); showTeams();
 }
-
-
-function changeJudge() {
-
-  if (!confirm("ต้องการเปลี่ยนกรรมการใช่หรือไม่?")) return;
-
-  localStorage.removeItem("ai_pitching_judge_id");
-  showJudgeSelection();
+function changeJudge(){
+  if(!confirm("ต้องการเปลี่ยนกรรมการใช่หรือไม่?"))return;
+  localStorage.removeItem("ai_pitching_judge_id"); showJudgeSelection();
 }
-
-
-async function loadTeamsAndScores() {
-
-  const [teamsRes, scoresRes] = await Promise.all([
-
-    sb.from("teams")
-      .select("*")
-      .order("team_no"),
-
-    sb.from("scores")
-      .select("*")
-      .eq("judge_id", currentJudge.id)
-
+async function loadTeamsAndScores(){
+  const [t,s]=await Promise.all([
+    sb.from("teams").select("*").order("team_no"),
+    sb.from("scores").select("*").eq("judge_id",currentJudge.id)
   ]);
-
-  if (teamsRes.error) {
-    showFatal(teamsRes.error.message);
-    return;
-  }
-
-  if (scoresRes.error) {
-    showFatal(scoresRes.error.message);
-    return;
-  }
-
-  teams = teamsRes.data || [];
-  scores = scoresRes.data || [];
-
-  renderTeams();
+  if(t.error){showFatal(t.error.message);return} if(s.error){showFatal(s.error.message);return}
+  teams=t.data||[]; scores=s.data||[]; renderTeams();
 }
-
-
-function renderTeams() {
-
-  const scoredIds = new Set(scores.map(s => s.team_id));
-
-  const completed = scoredIds.size;
-  const total = teams.length || 13;
-
-  document.getElementById("progressText").textContent =
-    `${completed} / ${total}`;
-
-  document.getElementById("progressFill").style.width =
-    `${(completed / total) * 100}%`;
-
-  document.getElementById("completeBanner").style.display =
-    completed === total ? "block" : "none";
-
-  document.getElementById("teamList").innerHTML =
-    teams.map(team => {
-
-      const scored = scoredIds.has(team.id);
-
-      return `
-        <button
-          class="team-button ${scored ? "scored" : ""}"
-          onclick="openTeam(${team.id})"
-        >
-          <div class="team-left">
-            <div class="team-no">
-              ${String(team.team_no).padStart(2,"0")}
-            </div>
-
-            <div class="team-name">
-              ${escapeHtml(team.name)}
-            </div>
-          </div>
-
-          <div class="team-status">
-            ${scored ? "✓ ให้แล้ว" : "ให้คะแนน →"}
-          </div>
-        </button>
-      `;
-    }).join("");
+function renderTeams(){
+  const scoredIds=new Set(scores.map(s=>s.team_id)); const completed=scoredIds.size; const total=teams.length||13;
+  document.getElementById("progressText").textContent=`${completed} / ${total}`;
+  document.getElementById("progressFill").style.width=`${(completed/total)*100}%`;
+  document.getElementById("completeBanner").style.display=completed===total?"block":"none";
+  document.getElementById("teamList").innerHTML=teams.map(team=>{
+    const scored=scoredIds.has(team.id);
+    return `<button class="team-button ${scored?"scored":""}" onclick="openTeam(${team.id})">
+      <div class="team-left"><div class="team-no">${String(team.team_no).padStart(2,"0")}</div><div class="team-name">${escapeHtml(team.name)}</div></div>
+      <div class="team-status">${scored?"✓ ให้แล้ว":"ให้คะแนน →"}</div></button>`;
+  }).join("");
 }
-
-
-function showTeams() {
-
+function showTeams(){
   document.getElementById("judgeScreen").classList.add("hidden");
   document.getElementById("scoreScreen").classList.add("hidden");
   document.getElementById("teamScreen").classList.remove("hidden");
-
-  document.getElementById("notice").className = "notice";
-  document.getElementById("notice").textContent = "";
-
-  renderTeams();
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("notice").className="notice"; document.getElementById("notice").textContent="";
+  renderTeams(); window.scrollTo({top:0,behavior:"smooth"});
 }
-
-
-function openTeam(teamId) {
-
-  currentTeam = teams.find(t => t.id === teamId);
-
-  if (!currentTeam) return;
-
-  const existing = scores.find(s => s.team_id === teamId);
-
-  formScore = {
-    presentation: existing?.presentation ?? null,
-    creativity: existing?.creativity ?? null,
-    business: existing?.business ?? null,
-    practical: existing?.practical ?? null
+function openTeam(teamId){
+  currentTeam=teams.find(t=>t.id===teamId); if(!currentTeam)return;
+  const existing=scores.find(s=>s.team_id===teamId);
+  formScore={
+    presentation:existing?.presentation??null,creativity:existing?.creativity??null,
+    business:existing?.business??null,practical:existing?.practical??null
   };
-
-  document.getElementById("selectedTeamNo").textContent =
-    `TEAM ${String(currentTeam.team_no).padStart(2,"0")}`;
-
-  document.getElementById("selectedTeamName").textContent =
-    currentTeam.name;
-
-  updateRatingUI();
-  validateForm();
-
+  document.getElementById("selectedTeamNo").textContent=`TEAM ${String(currentTeam.team_no).padStart(2,"0")}`;
+  document.getElementById("selectedTeamName").textContent=currentTeam.name;
+  updateRatingUI(); validateForm();
   document.getElementById("teamScreen").classList.add("hidden");
   document.getElementById("scoreScreen").classList.remove("hidden");
-
-  document.getElementById("notice").className = "notice";
-  document.getElementById("notice").textContent = "";
-
-  document.getElementById("submitBtn").textContent =
-    existing ? "บันทึกการแก้ไขคะแนน" : "ยืนยันคะแนน";
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("notice").className="notice"; document.getElementById("notice").textContent="";
+  document.getElementById("submitBtn").textContent=existing?"บันทึกการแก้ไขคะแนน":"ยืนยันคะแนน";
+  window.scrollTo({top:0,behavior:"smooth"});
 }
-
-
-function renderRatingButtons() {
-
-  document.querySelectorAll(".ratings").forEach(container => {
-
-    const field = container.dataset.field;
-
-    container.innerHTML = [1,2,3,4,5]
-      .map(value => `
-        <button
-          type="button"
-          class="rating-btn"
-          data-field="${field}"
-          data-value="${value}"
-          onclick="setRating('${field}', ${value})"
-        >
-          ${value}
-        </button>
-      `)
-      .join("");
+function renderRatingButtons(){
+  document.querySelectorAll(".ratings").forEach(c=>{
+    const field=c.dataset.field;
+    c.innerHTML=[1,2,3,4,5].map(v=>`<button type="button" class="rating-btn" data-field="${field}" data-value="${v}" onclick="setRating('${field}',${v})">${v}</button>`).join("");
   });
 }
-
-
-function setRating(field, value) {
-
-  formScore[field] = value;
-
-  updateRatingUI();
-  validateForm();
+function setRating(field,value){formScore[field]=value;updateRatingUI();validateForm()}
+function updateRatingUI(){
+  fields.forEach(field=>document.querySelectorAll(`.rating-btn[data-field="${field}"]`).forEach(btn=>btn.classList.toggle("active",formScore[field]===Number(btn.dataset.value))));
 }
-
-
-function updateRatingUI() {
-
-  fields.forEach(field => {
-
-    document
-      .querySelectorAll(`.rating-btn[data-field="${field}"]`)
-      .forEach(btn => {
-
-        const value = Number(btn.dataset.value);
-
-        btn.classList.toggle(
-          "active",
-          formScore[field] === value
-        );
-      });
-  });
+function validateForm(){document.getElementById("submitBtn").disabled=!fields.every(f=>Number.isInteger(formScore[f]))}
+async function submitScore(){
+  if(!currentJudge||!currentTeam)return;
+  if(!fields.every(f=>Number.isInteger(formScore[f])))return;
+  const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="กำลังบันทึก...";
+  const payload={team_id:currentTeam.id,judge_id:currentJudge.id,...formScore};
+  const {error}=await sb.from("scores").upsert(payload,{onConflict:"team_id,judge_id"});
+  if(error){showNotice("error","บันทึกไม่สำเร็จ: "+error.message);btn.disabled=false;btn.textContent="ลองอีกครั้ง";return}
+  await loadTeamsAndScores(); showNotice("success",`✓ บันทึกคะแนน ${currentTeam.name} เรียบร้อย`);
+  setTimeout(showTeams,650);
 }
-
-
-function validateForm() {
-
-  const complete = fields.every(
-    field => Number.isInteger(formScore[field])
-  );
-
-  document.getElementById("submitBtn").disabled = !complete;
-}
-
-
-async function submitScore() {
-
-  if (!currentJudge || !currentTeam) return;
-
-  const complete = fields.every(
-    field => Number.isInteger(formScore[field])
-  );
-
-  if (!complete) return;
-
-  const btn = document.getElementById("submitBtn");
-
-  btn.disabled = true;
-  btn.textContent = "กำลังบันทึก...";
-
-  const payload = {
-    team_id: currentTeam.id,
-    judge_id: currentJudge.id,
-    presentation: formScore.presentation,
-    creativity: formScore.creativity,
-    business: formScore.business,
-    practical: formScore.practical
-  };
-
-  const { error } = await sb
-    .from("scores")
-    .upsert(payload, {
-      onConflict: "team_id,judge_id"
-    });
-
-  if (error) {
-
-    showNotice(
-      "error",
-      "บันทึกไม่สำเร็จ: " + error.message
-    );
-
-    btn.disabled = false;
-    btn.textContent = "ลองบันทึกอีกครั้ง";
-
-    return;
-  }
-
-  await loadTeamsAndScores();
-
-  showNotice(
-    "success",
-    `✓ บันทึกคะแนน ${currentTeam.name} เรียบร้อย`
-  );
-
-  setTimeout(() => {
-    showTeams();
-  }, 700);
-}
-
-
-function showNotice(type, message) {
-
-  const notice = document.getElementById("notice");
-
-  notice.className = "notice " + type;
-  notice.textContent = message;
-}
-
-
-function showFatal(message) {
-
+function showNotice(type,msg){const n=document.getElementById("notice");n.className="notice "+type;n.textContent=msg}
+function showFatal(msg){
   document.getElementById("judgeScreen").classList.remove("hidden");
-  document.getElementById("teamScreen").classList.add("hidden");
-  document.getElementById("scoreScreen").classList.add("hidden");
-
-  document.getElementById("judgeButtons").innerHTML =
-    `<div class="notice error" style="display:block;">
-       เชื่อมต่อฐานข้อมูลไม่สำเร็จ<br>${escapeHtml(message)}
-     </div>`;
+  document.getElementById("teamScreen").classList.add("hidden");document.getElementById("scoreScreen").classList.add("hidden");
+  document.getElementById("judgeButtons").innerHTML=`<div class="notice error" style="display:block">เชื่อมต่อฐานข้อมูลไม่สำเร็จ<br>${escapeHtml(msg)}</div>`;
 }
-
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
+function escapeHtml(v){return String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 </script>
-
 </body>
 </html>
