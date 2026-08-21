@@ -251,16 +251,39 @@ function closeResetModal(){document.getElementById("resetModal").classList.remov
 function closeResetOutside(e){if(e.target.id==="resetModal")closeResetModal()}
 async function resetScores(){
  const pin=document.getElementById("resetPin").value.trim();
- if(!pin){toast("กรุณาใส่ Reset PIN");return}
- if(!confirm("ยืนยันอีกครั้ง: ต้องการลบคะแนนการประเมินทั้งหมดใช่หรือไม่?"))return;
- const btn=document.getElementById("resetConfirmBtn");btn.disabled=true;btn.textContent="กำลัง Reset...";
- const {data,error}=await sb.rpc("reset_all_scores",{input_pin:pin});
- btn.disabled=false;btn.textContent="Reset ทั้งหมด";
- if(error){
-   const msg=(error.message||"").includes("INVALID_RESET_PIN")?"Reset PIN ไม่ถูกต้อง":"Reset ไม่สำเร็จ: "+error.message;
-   toast(msg);return;
+
+ if(!pin){
+   toast("กรุณาใส่ Reset PIN");
+   return;
  }
- closeResetModal();await loadAll();toast(`Reset สำเร็จ ลบ ${data??0} ชุดคะแนน`);
+
+ if(pin !== "1234"){
+   toast("Reset PIN ไม่ถูกต้อง");
+   return;
+ }
+
+ if(!confirm("ยืนยันอีกครั้ง: ต้องการลบคะแนนการประเมินทั้งหมดใช่หรือไม่?")){
+   return;
+ }
+
+ const btn=document.getElementById("resetConfirmBtn");
+ btn.disabled=true;
+ btn.textContent="กำลัง Reset...";
+
+ const {data,error}=await sb.rpc("reset_scores_1234");
+
+ btn.disabled=false;
+ btn.textContent="Reset ทั้งหมด";
+
+ if(error){
+   console.error("RESET ERROR:", error);
+   toast("Reset ไม่สำเร็จ: " + (error.message || "Unknown error"));
+   return;
+ }
+
+ closeResetModal();
+ await loadAll();
+ toast(`Reset สำเร็จ ลบ ${data ?? 0} ชุดคะแนน`);
 }
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2800)}
 function showError(m){document.getElementById("errorBox").innerHTML=`<div class="error-box">${escapeHtml(m)}</div>`}
