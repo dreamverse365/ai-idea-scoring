@@ -99,6 +99,17 @@ button{font:inherit}
 .reset-confirm:disabled{opacity:.5}
 .toast{position:fixed;right:15px;bottom:15px;z-index:120;background:#0d704d;color:white;padding:11px 14px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.22);display:none;font-size:12px}
 .toast.show{display:block}
+
+.manage-grid{display:grid;gap:10px;margin-top:13px}
+.manage-row{display:grid;grid-template-columns:95px 1fr;gap:10px;align-items:center}
+.manage-label{font-size:12px;font-weight:700;color:#52647a}
+.manage-input{width:100%;height:48px;border:1px solid #cbd9e7;border-radius:12px;padding:0 13px;font:inherit;outline:none}
+.manage-input:focus{border-color:#1688f2;box-shadow:0 0 0 3px rgba(22,136,242,.12)}
+.manage-note{font-size:11px;color:#748297;line-height:1.55;margin-top:8px}
+.manage-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+.save-btn{height:48px;border:none;border-radius:12px;background:linear-gradient(135deg,#087fff,#06b4e8);color:white;font-weight:700;cursor:pointer}
+.save-btn:disabled{opacity:.5}
+
 @media(max-width:820px){.status-grid{grid-template-columns:repeat(2,1fr)}.judge-grid{grid-template-columns:1fr}.waiting-list{grid-template-columns:1fr}}
 @media(max-width:560px){.header{padding:12px 10px 36px}.logo-box img{width:112px}.heading h1{font-size:20px}.heading .eyebrow{font-size:9px}.container{padding:0 9px 32px}.card{border-radius:16px}.section{padding:14px}.rank-table th:nth-child(3),.rank-table td:nth-child(3){display:none}.team-no{display:block;margin-bottom:2px}.status-grid{gap:7px}.stat{padding:13px}.value{font-size:21px}}
 </style>
@@ -113,6 +124,7 @@ button{font:inherit}
       </div>
       <div class="header-actions">
         <button class="action-btn" onclick="loadAll()">↻ Refresh</button>
+        <button class="action-btn" onclick="openJudgeManager()">Manage Judges</button>
         <button class="action-btn danger" onclick="openResetModal()">Reset คะแนน</button>
       </div>
     </div>
@@ -150,6 +162,38 @@ button{font:inherit}
     <div class="modal-head"><div><div id="modalTeamNo" class="modal-team-no"></div><h2 id="modalTeamName"></h2></div><button class="close-btn" onclick="closeModal()">×</button></div>
     <div class="big-final"><strong id="modalFinal">—</strong><span>/ 100</span></div>
     <div id="modalContent"></div>
+  </div>
+</div>
+
+
+<div id="judgeManagerModal" class="modal reset-modal" onclick="closeJudgeManagerOutside(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-team-no">ADMIN SETTINGS</div>
+        <h2>Manage Judges</h2>
+      </div>
+      <button class="close-btn" onclick="closeJudgeManager()">×</button>
+    </div>
+
+    <div class="warning-box" style="background:#eef7ff;border-color:#c9e0fb;color:#355e8a;">
+      เปลี่ยนเฉพาะชื่อกรรมการ ระบบยังใช้ Judge ID เดิม ดังนั้นคะแนนที่เคยบันทึกไว้จะไม่หายและไม่สลับคน
+    </div>
+
+    <div id="judgeManageFields" class="manage-grid"></div>
+
+    <div class="manage-note">
+      ใส่ชื่อที่ต้องการให้แสดง เช่น “คุณสมชาย” หรือ “Somchai P.” แล้วกด Save
+    </div>
+
+    <div style="margin-top:12px;">
+      <input id="judgeManagePin" class="pin-input" type="password" inputmode="numeric" autocomplete="off" placeholder="Admin PIN">
+    </div>
+
+    <div class="manage-actions">
+      <button class="cancel-btn" onclick="closeJudgeManager()">ยกเลิก</button>
+      <button id="judgeSaveBtn" class="save-btn" onclick="saveJudgeNames()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -241,6 +285,80 @@ function openTeamDetail(id){
 function detailRow(label,field,gs){return`<tr><td>${label}</td>${judges.map(j=>{const s=gs(j.id);return`<td>${s?s[field]:"—"}</td>`}).join("")}</tr>`}
 function closeModal(){document.getElementById("detailModal").classList.remove("show")}
 function closeModalOutside(e){if(e.target.id==="detailModal")closeModal()}
+
+
+function openJudgeManager(){
+ const wrap=document.getElementById("judgeManageFields");
+ wrap.innerHTML=judges.map(j=>`
+   <div class="manage-row">
+     <div class="manage-label">Judge ${j.id}</div>
+     <input
+       class="manage-input"
+       id="judgeName_${j.id}"
+       maxlength="80"
+       value="${escapeHtml(j.name)}"
+       placeholder="ชื่อกรรมการ"
+     >
+   </div>
+ `).join("");
+
+ document.getElementById("judgeManagePin").value="";
+ document.getElementById("judgeManagerModal").classList.add("show");
+}
+
+function closeJudgeManager(){
+ document.getElementById("judgeManagerModal").classList.remove("show");
+}
+
+function closeJudgeManagerOutside(e){
+ if(e.target.id==="judgeManagerModal") closeJudgeManager();
+}
+
+async function saveJudgeNames(){
+ const pin=document.getElementById("judgeManagePin").value.trim();
+
+ if(pin!=="1234"){
+   toast("Admin PIN ไม่ถูกต้อง");
+   return;
+ }
+
+ const updates=judges.map(j=>({
+   id:j.id,
+   name:(document.getElementById(`judgeName_${j.id}`)?.value||"").trim()
+ }));
+
+ if(updates.some(x=>!x.name)){
+   toast("กรุณาใส่ชื่อกรรมการให้ครบ");
+   return;
+ }
+
+ const btn=document.getElementById("judgeSaveBtn");
+ btn.disabled=true;
+ btn.textContent="กำลังบันทึก...";
+
+ for(const item of updates){
+   const {error}=await sb.rpc("update_judge_name_1234",{
+     input_judge_id:item.id,
+     input_name:item.name
+   });
+
+   if(error){
+     console.error("UPDATE JUDGE ERROR:",error);
+     btn.disabled=false;
+     btn.textContent="Save";
+     toast("บันทึกไม่สำเร็จ: "+(error.message||"Unknown error"));
+     return;
+   }
+ }
+
+ btn.disabled=false;
+ btn.textContent="Save";
+
+ closeJudgeManager();
+ await loadAll();
+ toast("บันทึกชื่อกรรมการเรียบร้อย");
+}
+
 
 function openResetModal(){
  document.getElementById("resetPin").value="";
