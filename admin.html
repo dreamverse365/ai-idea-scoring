@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07162d" />
+  <title>AI Idea Pitching - Admin Results</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --navy:#07162d;
+      --navy2:#0c2b55;
+      --blue:#087bff;
+      --cyan:#31d9ff;
+      --orange:#ffb800;
+      --bg:#f3f7fb;
+      --card:#ffffff;
+      --text:#122033;
+      --muted:#718096;
+      --line:#dfe7f0;
+      --success:#159a68;
+      --warning:#bd7a00;
+      --danger:#c83c3c;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial, "Noto Sans Thai", sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    button{font:inherit}
+
+    .hero{
+      background:
+        radial-gradient(circle at 80% 10%, rgba(49,217,255,.18), transparent 28%),
+        radial-gradient(circle at 20% 0%, rgba(255,184,0,.12), transparent 22%),
+        linear-gradient(135deg,var(--navy),var(--navy2));
+      color:white;
+      padding:28px 18px 34px;
+    }
+
+    .hero-inner,
+    .container{
+      width:min(1100px,100%);
+      margin:auto;
+    }
+
+    .hero-top{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .eyebrow{
+      color:#9bdcff;
+      font-size:12px;
+      letter-spacing:1.8px;
+      font-weight:800;
+      margin-bottom:6px;
+    }
+
+    .hero h1{
+      margin:0;
+      font-size:clamp(25px,4vw,38px);
+      line-height:1.1;
+    }
+
+    .hero-sub{
+      color:#c8d9ee;
+      margin-top:8px;
+      font-size:14px;
+    }
+
+    .refresh-btn{
+      border:1px solid rgba(255,255,255,.28);
+      background:rgba(255,255,255,.08);
+      color:white;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-weight:800;
+    }
+
+    .container{
+      padding:18px 14px 40px;
+    }
+
+    .status-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:-28px;
+      margin-bottom:18px;
+    }
+
+    .status-card{
+      background:white;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:17px;
+      box-shadow:0 10px 28px rgba(23,55,89,.08);
+    }
+
+    .status-label{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:7px;
+    }
+
+    .status-value{
+      font-size:26px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .status-note{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:7px;
+    }
+
+    .ready{
+      background:linear-gradient(135deg,#e9faf2,#f7fffb);
+      border-color:#bce8d5;
+      color:#0b704b;
+    }
+
+    .section{
+      background:white;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      margin-bottom:16px;
+      box-shadow:0 10px 28px rgba(23,55,89,.05);
+    }
+
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .section-title{
+      font-size:20px;
+      font-weight:900;
+      margin:0;
+    }
+
+    .section-note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+    }
+
+    .judge-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+    }
+
+    .judge-card{
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      background:#fbfdff;
+    }
+
+    .judge-name{
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .judge-progress{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      margin-bottom:8px;
+    }
+
+    .judge-count{
+      font-size:22px;
+      font-weight:900;
+    }
+
+    .tag{
+      padding:5px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .tag.done{
+      background:#e7f8ef;
+      color:#0d7a52;
+    }
+
+    .tag.wait{
+      background:#fff6dc;
+      color:#966500;
+    }
+
+    .bar{
+      height:8px;
+      background:#e8eef5;
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .bar > div{
+      height:100%;
+      background:linear-gradient(90deg,var(--blue),var(--cyan));
+      transition:.3s ease;
+    }
+
+    .rank-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .rank-table th{
+      text-align:left;
+      color:var(--muted);
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .rank-table td{
+      padding:13px 12px;
+      border-bottom:1px solid #edf2f7;
+      vertical-align:middle;
+    }
+
+    .rank-table tr:last-child td{
+      border-bottom:none;
+    }
+
+    .rank-table tbody tr{
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    .rank-table tbody tr:hover{
+      background:#f8fbff;
+    }
+
+    .rank-no{
+      width:52px;
+      font-weight:900;
+      color:#52647b;
+    }
+
+    .rank-1,.rank-2,.rank-3{
+      display:inline-flex;
+      width:34px;
+      height:34px;
+      border-radius:11px;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+    }
+
+    .rank-1{background:#fff2c3;color:#8a6200}
+    .rank-2{background:#eef2f6;color:#566574}
+    .rank-3{background:#f5e2d3;color:#8b522d}
+
+    .team-no{
+      display:inline-block;
+      min-width:32px;
+      color:#0a63d8;
+      font-size:12px;
+      font-weight:900;
+      margin-right:8px;
+    }
+
+    .team-name{
+      font-weight:850;
+    }
+
+    .score{
+      font-size:19px;
+      font-weight:900;
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    .waiting-list{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:9px;
+    }
+
+    .waiting-item{
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:12px 13px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+    }
+
+    .waiting-meta{
+      color:var(--warning);
+      font-size:12px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .empty{
+      color:var(--muted);
+      text-align:center;
+      padding:26px 12px;
+    }
+
+    .last-update{
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(3,13,28,.58);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:100;
+    }
+
+    .modal.show{display:flex}
+
+    .modal-card{
+      width:min(720px,100%);
+      max-height:88vh;
+      overflow:auto;
+      background:white;
+      border-radius:20px;
+      padding:18px;
+      box-shadow:0 30px 80px rgba(0,0,0,.25);
+    }
+
+    .modal-head{
+      display:flex;
+      justify-content:space-between;
+      gap:15px;
+      align-items:flex-start;
+      margin-bottom:15px;
+    }
+
+    .modal h2{
+      margin:4px 0 0;
+      font-size:24px;
+    }
+
+    .close-btn{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:11px;
+      background:#edf2f7;
+      cursor:pointer;
+      font-size:19px;
+    }
+
+    .big-final{
+      display:flex;
+      align-items:baseline;
+      gap:7px;
+      margin:14px 0;
+    }
+
+    .big-final strong{
+      font-size:36px;
+      line-height:1;
+    }
+
+    .big-final span{
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .detail-table{
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    .detail-table th,
+    .detail-table td{
+      padding:11px 9px;
+      border-bottom:1px solid var(--line);
+      text-align:center;
+      font-size:13px;
+    }
+
+    .detail-table th:first-child,
+    .detail-table td:first-child{
+      text-align:left;
+    }
+
+    .loading{
+      color:var(--muted);
+      padding:30px;
+      text-align:center;
+    }
+
+    .error-box{
+      background:#fff0f0;
+      border:1px solid #f3c5c5;
+      color:#ad3434;
+      padding:13px;
+      border-radius:13px;
+      margin-bottom:14px;
+    }
+
+    @media(max-width:800px){
+      .status-grid{grid-template-columns:repeat(2,1fr)}
+      .judge-grid{grid-template-columns:1fr}
+      .waiting-list{grid-template-columns:1fr}
+    }
+
+    @media(max-width:560px){
+      .status-grid{grid-template-columns:1fr 1fr; gap:8px}
+      .status-card{padding:13px}
+      .status-value{font-size:22px}
+      .section{padding:14px}
+      .rank-table th:nth-child(3),
+      .rank-table td:nth-child(3){display:none}
+      .rank-table td{padding:12px 7px}
+      .team-no{display:block;margin:0 0 3px}
+      .score{font-size:17px}
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">AI IDEA PITCHING</div>
+        <h1>Admin Results</h1>
+        <div class="hero-sub">ผลคะแนนรวมจากกรรมการ 3 คน • 13 ทีม</div>
+      </div>
+
+      <button class="refresh-btn" onclick="loadAll()">
+        ↻ Refresh
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <div id="errorBox"></div>
+
+  <section class="status-grid">
+    <div class="status-card">
+      <div class="status-label">คะแนนที่ได้รับ</div>
+      <div id="submissionValue" class="status-value">0 / 39</div>
+      <div class="status-note">ทั้งหมด 39 ชุดคะแนน</div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-label">ทีมที่คะแนนครบ</div>
+      <div id="completeTeamsValue" class="status-value">0 / 13</div>
+      <div class="status-note">ครบกรรมการ 3 คน</div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-label">ความคืบหน้า</div>
+      <div id="percentValue" class="status-value">0%</div>
+      <div class="status-note">ของคะแนนทั้งหมด</div>
+    </div>
+
+    <div id="readyCard" class="status-card">
+      <div class="status-label">สถานะ</div>
+      <div id="readyValue" class="status-value" style="font-size:20px;">กำลังรอคะแนน</div>
+      <div id="readyNote" class="status-note">ระบบจะสรุปให้อัตโนมัติ</div>
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">Judge Progress</h2>
+        <div class="section-note">ดูว่าแต่ละกรรมการให้คะแนนครบ 13 ทีมแล้วหรือยัง</div>
+      </div>
+      <div id="lastUpdate" class="last-update"></div>
+    </div>
+
+    <div id="judgeGrid" class="judge-grid">
+      <div class="loading">กำลังโหลด...</div>
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">Final Ranking</h2>
+        <div class="section-note">แสดงอันดับเมื่อทีมนั้นได้รับคะแนนครบจากกรรมการทั้ง 3 คน</div>
+      </div>
+    </div>
+
+    <div id="rankingWrap">
+      <div class="loading">กำลังโหลด...</div>
+    </div>
+  </section>
+
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <h2 class="section-title">Waiting for Scores</h2>
+        <div class="section-note">ทีมที่ยังได้รับคะแนนไม่ครบ 3 คน</div>
+      </div>
+    </div>
+
+    <div id="waitingList" class="waiting-list"></div>
+  </section>
+
+</main>
+
+
+<!-- TEAM DETAIL -->
+<div id="detailModal" class="modal" onclick="closeModalOutside(event)">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div id="modalTeamNo" class="eyebrow" style="color:#0a63d8;"></div>
+        <h2 id="modalTeamName"></h2>
+      </div>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+
+    <div class="big-final">
+      <strong id="modalFinal">—</strong>
+      <span>/ 100</span>
+    </div>
+
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+
+<script>
+/* ==========================================================
+   ใส่ข้อมูล Supabase Project เดียวกับ index.html
+   ========================================================== */
+
+const SUPABASE_URL = "https://knuredwamhsawszjuyxb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_qKPNvt783aKIjJ9KWv5cSQ_M_CgHW6B";
+
+/* ========================================================== */
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let teams = [];
+let judges = [];
+let scores = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  if (
+    SUPABASE_URL.includes("PASTE_") ||
+    SUPABASE_KEY.includes("PASTE_")
+  ) {
+    showError("กรุณาใส่ SUPABASE_URL และ SUPABASE_KEY ในไฟล์ admin.html ก่อนใช้งาน");
+    return;
+  }
+
+  await loadAll();
+
+  // refresh อัตโนมัติทุก 8 วินาที
+  setInterval(loadAll, 8000);
+});
+
+
+async function loadAll() {
+
+  clearError();
+
+  const [teamRes, judgeRes, scoreRes] = await Promise.all([
+    sb.from("teams").select("*").order("team_no"),
+    sb.from("judges").select("*").order("id"),
+    sb.from("scores").select("*")
+  ]);
+
+  if (teamRes.error || judgeRes.error || scoreRes.error) {
+    showError(
+      teamRes.error?.message ||
+      judgeRes.error?.message ||
+      scoreRes.error?.message ||
+      "ไม่สามารถโหลดข้อมูลได้"
+    );
+    return;
+  }
+
+  teams = teamRes.data || [];
+  judges = judgeRes.data || [];
+  scores = scoreRes.data || [];
+
+  renderSummary();
+  renderJudges();
+  renderRanking();
+  renderWaiting();
+
+  document.getElementById("lastUpdate").textContent =
+    "อัปเดตล่าสุด " +
+    new Date().toLocaleTimeString("th-TH", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+}
+
+
+function renderSummary() {
+
+  const totalExpected = teams.length * judges.length || 39;
+  const received = scores.length;
+
+  const completeTeams = teams.filter(team =>
+    scores.filter(s => s.team_id === team.id).length === judges.length
+  ).length;
+
+  const percent = totalExpected
+    ? Math.round((received / totalExpected) * 100)
+    : 0;
+
+  document.getElementById("submissionValue").textContent =
+    `${received} / ${totalExpected}`;
+
+  document.getElementById("completeTeamsValue").textContent =
+    `${completeTeams} / ${teams.length || 13}`;
+
+  document.getElementById("percentValue").textContent =
+    `${percent}%`;
+
+  const ready = received === totalExpected && totalExpected > 0;
+
+  const readyCard = document.getElementById("readyCard");
+  const readyValue = document.getElementById("readyValue");
+  const readyNote = document.getElementById("readyNote");
+
+  if (ready) {
+    readyCard.classList.add("ready");
+    readyValue.textContent = "✓ คะแนนครบแล้ว";
+    readyNote.textContent = "พร้อมใช้ผล Final Ranking";
+  } else {
+    readyCard.classList.remove("ready");
+    readyValue.textContent = "กำลังรอคะแนน";
+    readyNote.textContent = `เหลืออีก ${Math.max(totalExpected - received, 0)} ชุดคะแนน`;
+  }
+}
+
+
+function renderJudges() {
+
+  const wrap = document.getElementById("judgeGrid");
+
+  if (!judges.length) {
+    wrap.innerHTML = '<div class="empty">ไม่พบข้อมูลกรรมการ</div>';
+    return;
+  }
+
+  wrap.innerHTML = judges.map(judge => {
+
+    const count = scores.filter(s => s.judge_id === judge.id).length;
+    const total = teams.length || 13;
+    const done = count === total;
+    const pct = total ? (count / total) * 100 : 0;
+
+    return `
+      <div class="judge-card">
+        <div class="judge-name">${escapeHtml(judge.name)}</div>
+
+        <div class="judge-progress">
+          <div class="judge-count">${count} / ${total}</div>
+
+          <span class="tag ${done ? "done" : "wait"}">
+            ${done ? "✓ Complete" : "Waiting"}
+          </span>
+        </div>
+
+        <div class="bar">
+          <div style="width:${pct}%"></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+
+function getTeamResult(team) {
+
+  const teamScores = scores.filter(s => s.team_id === team.id);
+
+  if (!teamScores.length) {
+    return {
+      team,
+      judgeCount: 0,
+      finalScore: null
+    };
+  }
+
+  const average =
+    teamScores.reduce((sum, s) => sum + Number(s.total_score), 0)
+    / teamScores.length;
+
+  return {
+    team,
+    judgeCount: teamScores.length,
+    finalScore:
+      teamScores.length === judges.length
+        ? average
+        : null
+  };
+}
+
+
+function getRankedResults() {
+
+  const complete = teams
+    .map(getTeamResult)
+    .filter(r => r.finalScore !== null)
+    .sort((a,b) => {
+      if (b.finalScore !== a.finalScore) {
+        return b.finalScore - a.finalScore;
+      }
+      return a.team.team_no - b.team.team_no;
+    });
+
+  let previousScore = null;
+  let previousRank = 0;
+
+  return complete.map((item, index) => {
+
+    let rank;
+
+    if (
+      previousScore !== null &&
+      Number(item.finalScore.toFixed(2)) === Number(previousScore.toFixed(2))
+    ) {
+      rank = previousRank;
+    } else {
+      rank = index + 1;
+    }
+
+    previousScore = item.finalScore;
+    previousRank = rank;
+
+    return {...item, rank};
+  });
+}
+
+
+function renderRanking() {
+
+  const wrap = document.getElementById("rankingWrap");
+  const ranked = getRankedResults();
+
+  if (!ranked.length) {
+    wrap.innerHTML =
+      '<div class="empty">ยังไม่มีทีมที่ได้รับคะแนนครบจากกรรมการทั้ง 3 คน</div>';
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div style="overflow-x:auto;">
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Judges</th>
+            <th style="text-align:right;">Final Score</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${ranked.map(r => `
+            <tr onclick="openTeamDetail(${r.team.id})">
+              <td class="rank-no">${rankBadge(r.rank)}</td>
+
+              <td>
+                <span class="team-no">
+                  ${String(r.team.team_no).padStart(2,"0")}
+                </span>
+                <span class="team-name">
+                  ${escapeHtml(r.team.name)}
+                </span>
+              </td>
+
+              <td>${r.judgeCount} / ${judges.length}</td>
+
+              <td class="score">
+                ${r.finalScore.toFixed(2)}%
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+
+function renderWaiting() {
+
+  const wrap = document.getElementById("waitingList");
+
+  const waiting = teams
+    .map(getTeamResult)
+    .filter(r => r.judgeCount < judges.length);
+
+  if (!waiting.length) {
+    wrap.innerHTML =
+      '<div class="empty" style="grid-column:1/-1;">✓ ทุกทีมได้รับคะแนนครบแล้ว</div>';
+    return;
+  }
+
+  wrap.innerHTML = waiting.map(r => `
+    <div class="waiting-item">
+      <div>
+        <span class="team-no">
+          ${String(r.team.team_no).padStart(2,"0")}
+        </span>
+        <span class="team-name">
+          ${escapeHtml(r.team.name)}
+        </span>
+      </div>
+
+      <div class="waiting-meta">
+        ${r.judgeCount} / ${judges.length} Judges
+      </div>
+    </div>
+  `).join("");
+}
+
+
+function rankBadge(rank) {
+
+  if (rank === 1) return '<span class="rank-1">1</span>';
+  if (rank === 2) return '<span class="rank-2">2</span>';
+  if (rank === 3) return '<span class="rank-3">3</span>';
+
+  return rank;
+}
+
+
+function openTeamDetail(teamId) {
+
+  const team = teams.find(t => t.id === teamId);
+  if (!team) return;
+
+  const teamScores = scores
+    .filter(s => s.team_id === teamId)
+    .sort((a,b) => a.judge_id - b.judge_id);
+
+  document.getElementById("modalTeamNo").textContent =
+    `TEAM ${String(team.team_no).padStart(2,"0")}`;
+
+  document.getElementById("modalTeamName").textContent =
+    team.name;
+
+  if (!teamScores.length) {
+    document.getElementById("modalFinal").textContent = "—";
+    document.getElementById("modalContent").innerHTML =
+      '<div class="empty">ยังไม่มีคะแนน</div>';
+  } else {
+
+    const avg = teamScores.reduce(
+      (sum,s) => sum + Number(s.total_score), 0
+    ) / teamScores.length;
+
+    document.getElementById("modalFinal").textContent =
+      teamScores.length === judges.length
+        ? avg.toFixed(2)
+        : "รอคะแนน";
+
+    const getJudgeScore = id =>
+      teamScores.find(s => s.judge_id === id);
+
+    document.getElementById("modalContent").innerHTML = `
+      <div style="overflow-x:auto;">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              ${judges.map(j =>
+                `<th>${escapeHtml(j.name)}</th>`
+              ).join("")}
+            </tr>
+          </thead>
+
+          <tbody>
+            ${detailRow(
+              "การเล่าเรื่องและการนำเสนอ",
+              "presentation",
+              getJudgeScore
+            )}
+
+            ${detailRow(
+              "ความคิดสร้างสรรค์และนวัตกรรม",
+              "creativity",
+              getJudgeScore
+            )}
+
+            ${detailRow(
+              "ประโยชน์ต่อธุรกิจ",
+              "business",
+              getJudgeScore
+            )}
+
+            ${detailRow(
+              "สามารถนำไปใช้ได้จริง",
+              "practical",
+              getJudgeScore
+            )}
+
+            <tr>
+              <td><strong>Total / 100</strong></td>
+              ${judges.map(j => {
+                const s = getJudgeScore(j.id);
+                return `<td><strong>${s ? Number(s.total_score).toFixed(2) : "—"}</strong></td>`;
+              }).join("")}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  document.getElementById("detailModal").classList.add("show");
+}
+
+
+function detailRow(label, field, getJudgeScore) {
+
+  return `
+    <tr>
+      <td>${label}</td>
+      ${judges.map(j => {
+        const s = getJudgeScore(j.id);
+        return `<td>${s ? s[field] : "—"}</td>`;
+      }).join("")}
+    </tr>
+  `;
+}
+
+
+function closeModal() {
+  document.getElementById("detailModal").classList.remove("show");
+}
+
+
+function closeModalOutside(event) {
+  if (event.target.id === "detailModal") closeModal();
+}
+
+
+function showError(message) {
+  document.getElementById("errorBox").innerHTML =
+    `<div class="error-box">${escapeHtml(message)}</div>`;
+}
+
+
+function clearError() {
+  document.getElementById("errorBox").innerHTML = "";
+}
+
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+</script>
+
+</body>
+</html>
